@@ -1,5 +1,6 @@
 package com.leaena.checkme;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    private final int EDIT_REQUEST_CODE = 10;
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
@@ -31,13 +33,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setupListViewListener() {
-        lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
+        lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
                 items.remove(pos);
                 itemsAdapter.notifyDataSetChanged();
                 writeItems();
                 return true;
+            }
+        });
+
+        lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
+                String itemText = items.get(pos);
+                launchEditView(itemText, pos);
             }
         });
     }
@@ -50,16 +60,18 @@ public class MainActivity extends AppCompatActivity {
         writeItems();
     }
 
+    //TODO: move off of text files
     public void readItems() {
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.txt");
         try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
+            items = new ArrayList<>(FileUtils.readLines(todoFile));
         } catch (IOException e) {
-            items = new ArrayList<String>();
+            items = new ArrayList<>();
         }
     }
 
+    //TODO: move off of text files
     public void writeItems() {
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.text");
@@ -67,6 +79,32 @@ public class MainActivity extends AppCompatActivity {
             FileUtils.writeLines(todoFile, items);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    //launches EditItemActivity for one item string value
+    public void launchEditView(String itemText, int pos) {
+        Intent i = new Intent(MainActivity.this, EditItemActivity.class);
+        // add text to be edited to intent
+        i.putExtra("edit_text", itemText);
+        i.putExtra("edit_text_pos", pos);
+        //start an activity iwth a request code to filter return result
+        startActivityForResult(i, EDIT_REQUEST_CODE);
+    }
+
+    public void updateListItem(String editText, int pos) {
+        //update item at position
+        items.set(pos, editText);
+        //let the list view know it needs to change how it looks
+        itemsAdapter.notifyDataSetChanged();
+        writeItems();
+    }
+
+    //one onActivityResult to rule them all
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent i) {
+        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
+            updateListItem(i.getStringExtra("edit_text"), i.getIntExtra("edit_text_pos", 0));
         }
     }
 }
