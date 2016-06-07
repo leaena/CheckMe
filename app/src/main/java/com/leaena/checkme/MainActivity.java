@@ -9,10 +9,6 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -20,16 +16,27 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
+    TodoDBHelper todoDB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        todoDB = new TodoDBHelper(this);
+        items = todoDB.getAllItems();
         lvItems = (ListView) findViewById(R.id.lvItems);
-        readItems();
+
         itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemsAdapter);
         setupListViewListener();
+    }
+
+    //one onActivityResult to rule them all
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent i) {
+        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
+            updateListItem(i.getStringExtra("edit_text"), i.getIntExtra("edit_text_pos", 0));
+        }
     }
 
     public void setupListViewListener() {
@@ -38,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
                 items.remove(pos);
                 itemsAdapter.notifyDataSetChanged();
-                writeItems();
+                todoDB.deleteItem(pos);
                 return true;
             }
         });
@@ -57,29 +64,7 @@ public class MainActivity extends AppCompatActivity {
         String itemText = etNewItem.getText().toString();
         itemsAdapter.add(itemText);
         etNewItem.setText("");
-        writeItems();
-    }
-
-    //TODO: move off of text files
-    public void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            items = new ArrayList<>(FileUtils.readLines(todoFile));
-        } catch (IOException e) {
-            items = new ArrayList<>();
-        }
-    }
-
-    //TODO: move off of text files
-    public void writeItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.text");
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        todoDB.insertItem(itemText);
     }
 
     //launches EditItemActivity for one item string value
@@ -97,14 +82,6 @@ public class MainActivity extends AppCompatActivity {
         items.set(pos, editText);
         //let the list view know it needs to change how it looks
         itemsAdapter.notifyDataSetChanged();
-        writeItems();
-    }
-
-    //one onActivityResult to rule them all
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent i) {
-        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
-            updateListItem(i.getStringExtra("edit_text"), i.getIntExtra("edit_text_pos", 0));
-        }
+        todoDB.updateItem(pos, editText);
     }
 }
