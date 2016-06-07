@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
         // add text to be edited to intent
         i.putExtra("edit_text", itemText);
         i.putExtra("edit_text_pos", pos);
-        //start an activity iwth a request code to filter return result
+        //start an activity with a request code to filter return result
         startActivityForResult(i, EDIT_REQUEST_CODE);
     }
 

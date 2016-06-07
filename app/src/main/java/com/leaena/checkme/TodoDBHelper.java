@@ -3,12 +3,10 @@ package com.leaena.checkme;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class TodoDBHelper extends SQLiteOpenHelper {
 
@@ -17,10 +15,7 @@ public class TodoDBHelper extends SQLiteOpenHelper {
     public static final String TABLE_TODO = "todo";
     public static final String TODO_COLUMN_ITEM = "item";
 
-    private HashMap hp;
-
-    public TodoDBHelper(Context context)
-    {
+    public TodoDBHelper(Context context) {
         super(context, DATABASE_NAME , null, DATABASE_VERSION);
     }
 
@@ -43,17 +38,6 @@ public class TodoDBHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public Cursor getData(int id){
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("select * from " + TABLE_TODO + " where id=" + id, null);
-    }
-
-    public int numberOfRows(){
-        SQLiteDatabase db = this.getReadableDatabase();
-        int numRows = (int) DatabaseUtils.queryNumEntries(db, TABLE_TODO);
-        return numRows;
-    }
-
     public boolean updateItem(Integer id, String itemText) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -72,9 +56,8 @@ public class TodoDBHelper extends SQLiteOpenHelper {
     public ArrayList<String> getAllItems() {
         ArrayList<String> itemList = new ArrayList<String>();
 
-        //hp = new HashMap();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from " + TABLE_TODO, null );
+        Cursor res =  db.rawQuery("select * from " + TABLE_TODO, null);
         res.moveToFirst();
 
         while(!res.isAfterLast()){
